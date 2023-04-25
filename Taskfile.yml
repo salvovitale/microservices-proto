@@ -1,0 +1,39 @@
+version: "3"
+
+tasks:
+  generate-order-proto:
+    cmds:
+      - task: generate-proto
+        vars:
+          SERVICE_NAME: order
+      - task: init-go-mod
+        vars:
+          SERVICE_NAME: order
+      - task: commit-proto-update
+      - task: add-tag-to-service
+        vars:
+          SERVICE_NAME: order
+          RELEASE_VERSION: v0.0.1
+
+  generate-proto:
+    cmds:
+      - cmd: rm -rf golang/{{ .SERVICE_NAME }}
+      - cmd: mkdir -p golang/{{ .SERVICE_NAME }}
+      - cmd: protoc --go_out=./golang --go_opt=paths=source_relative --go-grpc_out=./golang --go-grpc_opt=paths=source_relative ./{{ .SERVICE_NAME }}/*.proto
+
+  init-go-mod:
+    cmds:
+      - cmd: go mod init github.com/salvovitale/microservices-proto/golang/{{ .SERVICE_NAME }}
+      - cmd: go mod tidy
+    dir: golang/{{ .SERVICE_NAME }}
+
+  commit-proto-update:
+    cmds:
+      - cmd: git add .
+      - cmd: git commit -am "Update proto"
+      - cmd: git push origin main
+  add-tag-to-service:
+    cmds:
+      - cmd: git tag -fa golang/{{ .SERVICE_NAME }}/{{ .RELEASE_VERSION }} -m "golang/{{ .SERVICE_NAME }}/{{ .RELEASE_VERSION }}"
+      - cmd: git push origin {{ .TAG }}
+      - cmd: git push origin refs/tags/golang/{{ .SERVICE_NAME }}/{{ .RELEASE_VERSION }}
