@@ -1,19 +1,45 @@
 version: "3"
 
+env:
+  RELEASE_VERSION: v0.0.1
+  ORDER_SERVICE_NAME: order
+  PAYMENT_SERVICE_NAME: payment
+
+
 tasks:
-  generate-order-proto:
+  release-order-proto:
     cmds:
       - task: generate-proto
         vars:
-          SERVICE_NAME: order
+          SERVICE_NAME: ${ORDER_SERVICE_NAME}
       - task: init-go-mod
         vars:
-          SERVICE_NAME: order
+          SERVICE_NAME: ${ORDER_SERVICE_NAME}
       - task: commit-proto-update
+        vars:
+          SERVICE_NAME: ${ORDER_SERVICE_NAME}
+          RELEASE_VERSION: ${RELEASE_VERSION}
       - task: add-tag-to-service
         vars:
-          SERVICE_NAME: order
-          RELEASE_VERSION: v0.0.1
+          SERVICE_NAME: ${ORDER_SERVICE_NAME}
+          RELEASE_VERSION: ${RELEASE_VERSION}
+
+  release-payment-proto:
+    cmds:
+      - task: generate-proto
+        vars:
+          SERVICE_NAME: ${PAYMENT_SERVICE_NAME}
+      - task: init-go-mod
+        vars:
+          SERVICE_NAME: ${PAYMENT_SERVICE_NAME}
+      - task: commit-proto-update
+        vars:
+          SERVICE_NAME: ${PAYMENT_SERVICE_NAME}
+          RELEASE_VERSION: ${RELEASE_VERSION}
+      - task: add-tag-to-service
+        vars:
+          SERVICE_NAME: ${PAYMENT_SERVICE_NAME}
+          RELEASE_VERSION: ${RELEASE_VERSION}
 
   generate-proto:
     cmds:
@@ -30,7 +56,7 @@ tasks:
   commit-proto-update:
     cmds:
       - cmd: git add .
-      - cmd: git commit -am "Update proto"
+      - cmd: git commit -am "Update {{.SERVICE_NAME}} proto for release {{ .RELEASE_VERSION }}"
       - cmd: git push origin main
   add-tag-to-service:
     cmds:
